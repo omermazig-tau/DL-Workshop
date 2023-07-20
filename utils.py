@@ -85,7 +85,7 @@ def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: 
                     # Get height, width, and channels from the frame.shape tuple
                     height, width, channels = frame.shape
                     # Crop the bottom third of the frame
-                    crop_img = frame[height - height // 4:height, width - width // 2:width]
+                    crop_img = frame[height - height // 4:height, 0:width]
 
                     # Continue with your image processing steps...
                     gray = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
