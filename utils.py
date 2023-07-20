@@ -59,7 +59,7 @@ def get_video_event_dict(game_id: str, game_event_id: str) -> Dict:
     return json
 
 
-def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: str):
+def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: str) -> bool:
     pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
     cap = cv2.VideoCapture(video_path)
@@ -74,17 +74,18 @@ def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: 
 
         while cap.isOpened():
             ret, frame = cap.read()
-            if not ret:
-                # Video has ended
-                break
 
             if not recording:
+                if not ret:
+                    # Video has ended, without us recording anything
+                    return False
+
                 # Check text condition every 1 second
                 if current_frames % fps == 0:
                     # Get height, width, and channels from the frame.shape tuple
                     height, width, channels = frame.shape
                     # Crop the bottom third of the frame
-                    crop_img = frame[height - height // 3:height, 0:width]
+                    crop_img = frame[height - height // 4:height, width - width // 2:width]
 
                     # Continue with your image processing steps...
                     gray = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
@@ -99,24 +100,24 @@ def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: 
                         # Initialize the video writer to save the cut video
                         fourcc = cv2.VideoWriter_fourcc(*'XVID')
                         out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
-            else:
+            else:  # Recording
+                # Check if the required number of frames have been recorded
+                if new_video_current_frames > frames_to_record or not ret:
+                    # We're done recording
+                    out.release()
+                    return True
                 # Write the frame to the cut video
                 out.write(frame)
                 new_video_current_frames += 1
-
-                # Check if the required number of frames have been recorded
-                if new_video_current_frames >= frames_to_record:
-                    recording = None # Signal that we're done recording
-                    out.release()
 
             current_frames += 1
 
             # # Display the processed frame (optional)
             # cv2.imshow("Processed Frame", blurred)
-
-            # Press 'q' to quit
-            if cv2.waitKey(1) & 0xFF == ord('q') or recording is None:
-                break
+            #
+            # # Press 'q' to quit
+            # if cv2.waitKey(1) & 0xFF == ord('q'):
+            #     break
 
     finally:
         # Release the video capture and close all windows
