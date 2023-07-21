@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timedelta
 
 import cv2
@@ -12,6 +13,46 @@ from typing import Dict
 from nba_api.stats.endpoints import playbyplayv2, videoeventsasset
 
 logger = logging.getLogger(__name__)
+
+prior_shot_type_to_shot_dsc = {
+    1: 'JUMP_SHOT',
+    2: 'RUNNING_JUMP_SHOT',
+    3: 'HOOK_SHOT',
+    5: 'LAYUP',
+    6: 'DRIVING_LAYUP',
+    7: 'DUNK',
+    41: 'RUNNING_LAYUP',
+    42: 'DRIVING_LAYUP',
+    43: 'ALLEY_OOP_LAYUP',
+    44: 'REVERSE_LAYUP',
+    47: 'TURNAROUND_JUMP_SHOT',
+    49: 'DRIVING_DUNK',
+    50: 'RUNNING_DUNK',
+    52: 'ALLEY_OOP_DUNK',
+    57: 'DRIVING_HOOK_SHOT',
+    58: 'TURNAROUND_HOOK_SHOT',
+    63: 'FADEAWAY_JUMPER',
+    66: 'JUMP_BANK_SHOT',
+    71: 'FINGER_ROLL_LAYUP',
+    72: 'PUTBACK_LAYUP',
+    73: 'DRIVING_REVERSE_LAYUP',
+    75: 'DRIVING_FINGER_ROLL_LAYUP',
+    76: 'RUNNING_FINGER_ROLL_LAYUP',
+    77: 'DRIVING_JUMP_SHOT',
+    78: 'FLOATING_JUMP_SHOT',
+    79: 'ULLUP_JUMP_SHOT',
+    80: 'STEP_BACK_JUMP_SHOT',
+    82: 'DRIVING_BANK_SHOT',
+    86: 'URNAROUND_FADEAWAY',
+    97: 'IP_LAYUP_SHOT',
+    98: 'CUTTING_LAYUP_SHOT',
+    99: 'CUTTING_FINGER_ROLL_LAYUP_SHOT',
+    101: 'DRIVING_FLOATING_JUMP_SHOT',
+    102: 'DRIVING_FLOATING_BANK_JUMP_SHOT',
+    105: 'URNAROUND_FADEAWAY_BANK_JUMP_SHOT',
+    107: 'IP_DUNK_SHOT',
+    108: 'CUTTING_DUNK_SHOT'
+}
 
 
 class ActionGapManager:
@@ -150,3 +191,39 @@ def add_seconds_to_time(time_str, seconds_to_add):
         result_time_str = result_time_str[1:]
 
     return result_time_str
+
+
+def get_shots_event_data_from_game_df(df):
+    # Remove every play other than a shot
+    df = df[df['EVENTMSGTYPE'] <= 2]
+    # Remove plays without video
+    df = df[df["VIDEO_AVAILABLE_FLAG"] == 1]
+    # Remove blocked shots. We don't want them because They'll be harder to classify
+    df = df[~(df['HOMEDESCRIPTION'].str.contains('BLOCK') | df['VISITORDESCRIPTION'].str.contains('BLOCK'))]
+    # Create `DESCRIPTION` from either teams column (doesn't matter to us)
+    # Makes sure before that we didn't mess up, and have a play wite 2 descriptions
+    if df[['VISITORDESCRIPTION', 'HOMEDESCRIPTION']].notna().all(axis=1).any():
+        raise ValueError("df has a row where both `VISITORDESCRIPTION` and `HOMEDESCRIPTION` and not None")
+    df['DESCRIPTION'] = df['HOMEDESCRIPTION'].fillna(df['VISITORDESCRIPTION'])
+    # Make sure that every line has a not-None description
+    if not df['DESCRIPTION'].notna().all():
+        raise ValueError("df has a row where `DESCRIPTION` is None")
+    # Filter out irrelevant data
+    shots_event_data = df[
+        ['EVENTNUM', 'EVENTMSGACTIONTYPE', 'PERIOD', 'PCTIMESTRING', 'DESCRIPTION', 'EVENTMSGTYPE',
+         'VIDEO_AVAILABLE_FLAG']]
+    return shots_event_data
+
+
+def get_event_msg_action(description, dsc_from_playlist):
+    p = re.compile('(\s{2}|\' )([\w+ ]*)')
+
+    if dsc_from_playlist != description:
+        # If those are different for reason other than the BLOCK information addition, we want to know
+        raise ValueError(f"{dsc_from_playlist} is different that {description}")
+    match = p.findall(description)
+    if not match:
+        return None
+    else:
+        event_msg_action = re.sub(' ', '_', match[0][1]).upper().rstrip("_").replace("3PT_", "")
+        return event_msg_action
