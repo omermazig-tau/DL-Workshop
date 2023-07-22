@@ -15,6 +15,7 @@ from nba_api.stats.endpoints import playbyplayv2, videoeventsasset
 logger = logging.getLogger(__name__)
 
 prior_shot_type_to_shot_dsc = {
+    0: 'NO_SHOT',
     1: 'JUMP_SHOT',
     2: 'RUNNING_JUMP_SHOT',
     3: 'HOOK_SHOT',
@@ -61,17 +62,24 @@ prior_shot_type_to_shot_dsc = {
     86: 'TURNAROUND_FADEAWAY',
     87: 'PUTBACK_DUNK',
     93: 'DRIVING_BANK_HOOK_SHOT',
-    97: 'IP_LAYUP_SHOT',
+    97: 'TIP_LAYUP_SHOT',
     98: 'CUTTING_LAYUP_SHOT',
     99: 'CUTTING_FINGER_ROLL_LAYUP_SHOT',
+    100: 'RUNNING_ALLEY_OOP_LAYUP_SHOT',
     101: 'DRIVING_FLOATING_JUMP_SHOT',
     102: 'DRIVING_FLOATING_BANK_JUMP_SHOT',
     103: 'RUNNING_PULL',
     105: 'TURNAROUND_FADEAWAY_BANK_JUMP_SHOT',
     106: 'RUNNING_ALLEY_OOP_DUNK_SHOT',
-    107: 'IP_DUNK_SHOT',
+    107: 'TIP_DUNK_SHOT',
     108: 'CUTTING_DUNK_SHOT'
 }
+
+hook_shot_classes = {k: v for k, v in prior_shot_type_to_shot_dsc if 'HOOK_SHOT' in v}
+jump_shot_classes = {k: v for k, v in prior_shot_type_to_shot_dsc if 'JUMP_SHOT' in v}
+layup_classes = {k: v for k, v in prior_shot_type_to_shot_dsc if 'LAYUP' in v}
+dunk_classes = {k: v for k, v in prior_shot_type_to_shot_dsc if 'DUNK' in v}
+putback_classes = {k: v for k, v in prior_shot_type_to_shot_dsc if 'TIP_' in v or 'PUTBACK' in v}
 
 
 class ActionGapManager:
