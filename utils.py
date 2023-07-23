@@ -210,7 +210,7 @@ def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: 
 
         # We're done recording
         out.release()
-        return True
+        return new_video_current_frame > 0
 
     finally:
         # Release the video capture and close all windows
