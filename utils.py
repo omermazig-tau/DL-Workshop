@@ -127,6 +127,25 @@ def get_video_event_dict(game_id: str, game_event_id: str) -> Dict:
     return json
 
 
+# rf = Roboflow(api_key="8VOyQWRE73L2itfMq1wC")
+# project = rf.workspace().project("basketball-players-fy4c2")
+# model = project.version(20).model
+
+
+# def get_bbox(frame):
+#     predictions = model.predict(frame, confidence=10, overlap=30).json()['predictions']
+#     predictions = [prediction for prediction in predictions
+#                    if prediction['class'] == 'Time Remaining']
+#     for time_remaining_prediction in predictions:
+#         y = math.floor(time_remaining_prediction['y'])
+#         x = math.floor(time_remaining_prediction['x'])
+#         height = math.ceil(time_remaining_prediction['height'])
+#         width = math.ceil(time_remaining_prediction['width'])
+#         start_point = int(x - width / 2), int(y + height / 2)
+#         end_point = int(x + width / 2), int(y - height / 2)
+#         yield start_point, end_point
+
+
 def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: str) -> bool:
     pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
