@@ -246,6 +246,8 @@ def get_shots_event_data_from_game_df(df):
     df = df[df["VIDEO_AVAILABLE_FLAG"] == 1]
     # Remove blocked shots. We don't want them because They'll be harder to classify
     df = df[~(df['HOMEDESCRIPTION'].str.contains('BLOCK') | df['VISITORDESCRIPTION'].str.contains('BLOCK'))]
+    # Remove tip and putback shots. They will be hard to classify
+    df = df[~df['EVENTMSGACTIONTYPE'].isin(putback_classes.keys())]
     # Create `DESCRIPTION` from either teams column (doesn't matter to us)
     # Makes sure before that we didn't mess up, and have a play wite 2 descriptions
     if df[['VISITORDESCRIPTION', 'HOMEDESCRIPTION']].notna().all(axis=1).any():
