@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 import cv2
 import logging
+import pandas as pd
 import pytesseract
 import time
 from contextlib import contextmanager
@@ -250,6 +251,13 @@ def add_seconds_to_time(time_str, seconds_to_add):
 
 
 def get_shots_event_data_from_game_df(df):
+    time_format = "%M:%S"
+    # Add time from last event based on the shot clock
+    df['TIME_FROM_PREVIOUS_EVENT'] = \
+        df['PCTIMESTRING'].shift(1).apply(lambda x: datetime.strptime(x or "12:00", time_format)) - \
+        df['PCTIMESTRING'].apply(lambda x: datetime.strptime(x, time_format))
+    # Remove all events which happens less than 4 seconds after a rebound. Their video will like contain ashot
+    df = df[~((df['TIME_FROM_PREVIOUS_EVENT'] < pd.Timedelta(seconds=4)) & (df['EVENTMSGTYPE'].shift(1) == 4))]
     # Remove every play other than a shot
     df = df[df['EVENTMSGTYPE'] <= 2]
     # Remove plays without video
