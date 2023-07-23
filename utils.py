@@ -58,9 +58,11 @@ prior_shot_type_to_shot_dsc = {
     81: 'PULLUP_BANK_SHOT',
     82: 'DRIVING_BANK_SHOT',
     83: 'FADEAWAY_BANK_SHOT',
+    84: 'RUNNING_BANK_SHOT',
     85: 'TURNAROUND_BANK_SHOT',
     86: 'TURNAROUND_FADEAWAY',
     87: 'PUTBACK_DUNK',
+    90: 'RUNNING_SLAM_DUNK',
     93: 'DRIVING_BANK_HOOK_SHOT',
     97: 'TIP_LAYUP_SHOT',
     98: 'CUTTING_LAYUP_SHOT',
@@ -72,7 +74,9 @@ prior_shot_type_to_shot_dsc = {
     105: 'TURNAROUND_FADEAWAY_BANK_JUMP_SHOT',
     106: 'RUNNING_ALLEY_OOP_DUNK_SHOT',
     107: 'TIP_DUNK_SHOT',
-    108: 'CUTTING_DUNK_SHOT'
+    108: 'CUTTING_DUNK_SHOT',
+    109: 'DRIVING_REVERSE_DUNK_SHOT',
+
 }
 
 hook_shot_classes = {k: v for k, v in prior_shot_type_to_shot_dsc.items() if 'HOOK_SHOT' in v}
