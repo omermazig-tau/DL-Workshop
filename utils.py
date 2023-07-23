@@ -152,52 +152,54 @@ def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: 
     cap = cv2.VideoCapture(video_path)
     fps = cap.get(cv2.CAP_PROP_FPS)
 
+    frames_to_record = int(cut_duration * fps)
+    current_frame = 0
+
     try:
-        # Variables to track video recording
-        recording = False
-        frames_to_record = int(cut_duration * fps)
-        current_frames = 0
-        new_video_current_frames = 0
+        # Read first frame
+        ret, frame = cap.read()
+        if not ret:
+            # Video has ended, without us recording anything
+            return False
 
-        while cap.isOpened():
-            ret, frame = cap.read()
+        # Get height, width, and channels from the frame.shape tuple
+        height, width, channels = frame.shape
 
-            if not recording:
+        while True:
+            # Crop the bottom third of the frame
+            crop_img = frame[height - height // 4:height, 0:width]
+            # Continue with your image processing steps...
+            gray = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
+            bw = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+            blurred = cv2.GaussianBlur(bw, (5, 5), 0)
+            text_data = pytesseract.image_to_string(blurred, lang='eng', config='--psm 11')
+
+            # Check if the game clock matches the condition, and we should start recording
+            if start_time in text_data:
+                # Exit to start recording
+                break
+            else:
+                # Jump 1 second forward
+                current_frame += fps
+                cap.set(cv2.CAP_PROP_POS_FRAMES, current_frame)
+                # Read next frame
+                ret, frame = cap.read()
                 if not ret:
                     # Video has ended, without us recording anything
                     return False
 
-                # Check text condition every 1 second
-                if current_frames % fps == 0:
-                    # Get height, width, and channels from the frame.shape tuple
-                    height, width, channels = frame.shape
-                    # Crop the bottom third of the frame
-                    crop_img = frame[height - height // 4:height, 0:width]
+        # Initialize the video writer to save the cut video
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+        new_video_current_frame = 0
 
-                    # Continue with your image processing steps...
-                    gray = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
-                    bw = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
-                    blurred = cv2.GaussianBlur(bw, (5, 5), 0)
-                    text_data = pytesseract.image_to_string(blurred, lang='eng', config='--psm 11')
-
-                    # Check if the condition is met and we should start recording
-                    if start_time in text_data:
-                        # Set recording
-                        recording = True
-                        # Initialize the video writer to save the cut video
-                        fourcc = cv2.VideoWriter_fourcc(*'XVID')
-                        out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
-            else:  # Recording
-                # Check if the required number of frames have been recorded
-                if new_video_current_frames > frames_to_record or not ret:
-                    # We're done recording
-                    out.release()
-                    return True
-                # Write the frame to the cut video
-                out.write(frame)
-                new_video_current_frames += 1
-
-            current_frames += 1
+        while new_video_current_frame < frames_to_record and ret:
+            # Write the frame to the cut video
+            out.write(frame)
+            new_video_current_frame += 1
+            current_frame += 1
+            # Read next frame
+            ret, frame = cap.read()
 
             # # Display the processed frame (optional)
             # cv2.imshow("Processed Frame", blurred)
@@ -206,10 +208,14 @@ def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: 
             # if cv2.waitKey(1) & 0xFF == ord('q'):
             #     break
 
+        # We're done recording
+        out.release()
+        return True
+
     finally:
         # Release the video capture and close all windows
         cap.release()
-        cv2.destroyAllWindows()
+        # cv2.destroyAllWindows()
 
 
 def add_seconds_to_time(time_str, seconds_to_add):
