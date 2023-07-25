@@ -352,12 +352,9 @@ def get_shots_event_data_from_game_df(df):
     return shots_event_data
 
 
-def get_event_msg_action(description, dsc_from_playlist):
+def get_event_msg_action(description):
     p = re.compile('(\s{2}|\' )([\w+ ]*)')
 
-    if dsc_from_playlist != description:
-        # If those are different for reason other than the BLOCK information addition, we want to know
-        raise ValueError(f"{dsc_from_playlist} is different that {description}")
     match = p.findall(description)
     if not match:
         return None
