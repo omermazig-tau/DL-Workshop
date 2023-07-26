@@ -186,6 +186,9 @@ nba_api_cooldown = 0.6
 gap_manager = ActionGapManager(gap=nba_api_cooldown)
 
 
+@retry(stop=stop_after_attempt(50), wait=wait_random(min=1, max=2),
+       retry=retry_if_exception_type((JSONDecodeError, ConnectionError)), reraise=True,
+       before_sleep=before_sleep_log(logger, logging.DEBUG))
 def get_pbp_data(game_id):
     with gap_manager.action_gap():
         raw_data = playbyplayv2.PlayByPlayV2(game_id=game_id, timeout=60 * 5)
