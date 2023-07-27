@@ -187,7 +187,8 @@ gap_manager = ActionGapManager(gap=nba_api_cooldown)
 
 
 @retry(stop=stop_after_attempt(50), wait=wait_random(min=1, max=2),
-       retry=retry_if_exception_type((JSONDecodeError, ConnectionError)), reraise=True,
+       retry=retry_if_exception_type(
+           (JSONDecodeError, ConnectionError, RemoteDisconnected, gaierror, NewConnectionError)), reraise=True,
        before_sleep=before_sleep_log(logger, logging.DEBUG))
 def get_pbp_data(game_id):
     with gap_manager.action_gap():
@@ -197,7 +198,8 @@ def get_pbp_data(game_id):
 
 
 @retry(stop=stop_after_attempt(50), wait=wait_random(min=1, max=2),
-       retry=retry_if_exception_type((JSONDecodeError, ConnectionError)), reraise=True,
+       retry=retry_if_exception_type(
+           (JSONDecodeError, ConnectionError, RemoteDisconnected, gaierror, NewConnectionError)), reraise=True,
        before_sleep=before_sleep_log(logger, logging.DEBUG))
 def get_video_event_dict(game_id: str, game_event_id: str) -> Dict:
     with gap_manager.action_gap():
