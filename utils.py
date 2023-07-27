@@ -1,5 +1,6 @@
 import re
 from datetime import datetime, timedelta
+from http.client import RemoteDisconnected
 
 import cv2
 import logging
@@ -8,10 +9,12 @@ import pytesseract
 import time
 from contextlib import contextmanager
 from json import JSONDecodeError
+from _socket import gaierror
 from tenacity import retry, stop_after_attempt, wait_random, retry_if_exception_type, before_sleep_log
 from typing import Dict
 
 from nba_api.stats.endpoints import playbyplayv2, videoeventsasset
+from urllib3.exceptions import NewConnectionError
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +67,7 @@ prior_shot_type_to_shot_dsc = {
     85: 'TURNAROUND_BANK_SHOT',
     86: 'TURNAROUND_FADEAWAY',
     87: 'PUTBACK_DUNK',
+    88: 'DRIVING_SLAM_DUNK',
     90: 'RUNNING_SLAM_DUNK',
     93: 'DRIVING_BANK_HOOK_SHOT',
     97: 'TIP_LAYUP_SHOT',
@@ -73,12 +77,12 @@ prior_shot_type_to_shot_dsc = {
     101: 'DRIVING_FLOATING_JUMP_SHOT',
     102: 'DRIVING_FLOATING_BANK_JUMP_SHOT',
     103: 'RUNNING_PULL',
+    104: 'STEP_BACK_BANK_JUMP_SHOT',
     105: 'TURNAROUND_FADEAWAY_BANK_JUMP_SHOT',
     106: 'RUNNING_ALLEY_OOP_DUNK_SHOT',
     107: 'TIP_DUNK_SHOT',
     108: 'CUTTING_DUNK_SHOT',
     109: 'DRIVING_REVERSE_DUNK_SHOT',
-
 }
 
 # Each shot type to it's number of plays throughout the whole NBA-API database
