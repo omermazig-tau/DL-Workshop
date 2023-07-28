@@ -1,6 +1,5 @@
 import re
 from datetime import datetime, timedelta
-from http.client import RemoteDisconnected
 
 import cv2
 import logging
@@ -10,12 +9,12 @@ import time
 from contextlib import contextmanager
 from json import JSONDecodeError
 from _socket import gaierror
-from requests import ConnectTimeout
+from requests import ConnectionError as RequestsConnectionError
 from tenacity import retry, stop_after_attempt, wait_random, retry_if_exception_type, before_sleep_log
 from typing import Dict
 
 from nba_api.stats.endpoints import playbyplayv2, videoeventsasset
-from urllib3.exceptions import NewConnectionError, ProtocolError, HTTPError
+from urllib3.exceptions import HTTPError
 
 logger = logging.getLogger(__name__)
 
@@ -195,7 +194,8 @@ gap_manager = ActionGapManager(gap=nba_api_cooldown)
 
 
 @retry(stop=stop_after_attempt(50), wait=wait_random(min=1, max=2),
-       retry=retry_if_exception_type((JSONDecodeError, ConnectionError, gaierror, HTTPError)), reraise=True,
+       retry=retry_if_exception_type((JSONDecodeError, ConnectionError, gaierror, HTTPError, RequestsConnectionError)),
+       reraise=True,
        before_sleep=before_sleep_log(logger, logging.DEBUG))
 def get_pbp_data(game_id):
     with gap_manager.action_gap():
@@ -205,7 +205,8 @@ def get_pbp_data(game_id):
 
 
 @retry(stop=stop_after_attempt(50), wait=wait_random(min=1, max=2),
-       retry=retry_if_exception_type((JSONDecodeError, ConnectionError, gaierror, HTTPError)), reraise=True,
+       retry=retry_if_exception_type((JSONDecodeError, ConnectionError, gaierror, HTTPError, RequestsConnectionError)),
+       reraise=True,
        before_sleep=before_sleep_log(logger, logging.DEBUG))
 def get_video_event_dict(game_id: str, game_event_id: str) -> Dict:
     with gap_manager.action_gap():
