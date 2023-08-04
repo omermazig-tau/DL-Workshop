@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 
 # Each shot type to it's name
 prior_shot_type_to_shot_dsc = {
-    0: 'NO_SHOT',
     1: 'JUMP_SHOT',
     2: 'RUNNING_JUMP_SHOT',
     3: 'HOOK_SHOT',
@@ -88,7 +87,6 @@ prior_shot_type_to_shot_dsc = {
 
 # Each shot type to it's number of plays throughout the whole NBA-API database
 prior_shot_type_histogram = {
-    0: 182,
     1: 730831,
     2: 11918,
     3: 25977,
