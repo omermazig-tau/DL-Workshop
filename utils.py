@@ -152,10 +152,12 @@ prior_shot_type_histogram = {
     110: 143
 }
 
-hook_shot_classes = {k: v for k, v in prior_shot_type_to_shot_dsc.items() if 'HOOK_SHOT' in v}
+hook_shot_classes = {k: v for k, v in prior_shot_type_to_shot_dsc.items() if 'HOOK' in v}
+bank_shot_classes = {k: v for k, v in prior_shot_type_to_shot_dsc.items() if 'BANK' in v}
 jump_shot_classes = {k: v for k, v in prior_shot_type_to_shot_dsc.items() if 'JUMP_SHOT' in v}
 layup_classes = {k: v for k, v in prior_shot_type_to_shot_dsc.items() if 'LAYUP' in v}
 dunk_classes = {k: v for k, v in prior_shot_type_to_shot_dsc.items() if 'DUNK' in v}
+cut_classes = {k: v for k, v in prior_shot_type_to_shot_dsc.items() if 'CUT' in v}
 putback_classes = {k: v for k, v in prior_shot_type_to_shot_dsc.items() if 'TIP_' in v or 'PUTBACK' in v}
 
 
