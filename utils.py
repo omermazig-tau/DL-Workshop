@@ -330,13 +330,25 @@ def add_seconds_to_time(time_str, seconds_to_add):
 
 
 def get_shots_event_data_from_game_df(df):
+    REBOUND_EVENT_TYPE = 4
+
     time_format = "%M:%S"
     # Add time from last event based on the shot clock
     df['TIME_FROM_PREVIOUS_EVENT'] = \
-        df['PCTIMESTRING'].shift(1).apply(lambda x: datetime.strptime(x or "12:00", time_format)) - \
+        df['PCTIMESTRING'].shift(1, fill_value="12:00").apply(lambda x: datetime.strptime(x, time_format)) - \
         df['PCTIMESTRING'].apply(lambda x: datetime.strptime(x, time_format))
-    # Remove all events which happens less than 4 seconds after a rebound. Their video will like contain ashot
-    df = df[~((df['TIME_FROM_PREVIOUS_EVENT'] < pd.Timedelta(seconds=4)) & (df['EVENTMSGTYPE'].shift(1) == 4))]
+    # Remove shots which happens less than 4 secs directly after/before a rebound. These videos likely contains 2 shots.
+    indices_to_remove = df[
+        # Event is a rebound
+        (df['EVENTMSGTYPE'] == REBOUND_EVENT_TYPE) &
+        # Event less than 4 seconds after is a shot
+        ((df['EVENTMSGTYPE'].shift(1) == 2) & (df['TIME_FROM_PREVIOUS_EVENT'] < pd.Timedelta(seconds=4))) &
+        # Event less than 4 seconds before is a shot
+        ((df['EVENTMSGTYPE'].shift(-1) <= 2) & (df['TIME_FROM_PREVIOUS_EVENT'].shift(-1) < pd.Timedelta(seconds=4)))
+        ].index
+    adjacent_indices = [index - 1 for index in indices_to_remove] + [index + 1 for index in indices_to_remove]
+    # Remove rows from df based on indices
+    df = df.drop(indices_to_remove).drop(adjacent_indices)
     # Remove every play other than a shot
     df = df[df['EVENTMSGTYPE'] <= 2]
     # Remove plays without video
