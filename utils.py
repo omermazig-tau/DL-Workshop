@@ -1,4 +1,5 @@
 import glob
+import json
 import os
 import random
 import re
@@ -12,6 +13,8 @@ import pytesseract
 import time
 from contextlib import contextmanager
 from json import JSONDecodeError
+
+import youtube_dl
 from _socket import gaierror
 from requests import ConnectionError as RequestsConnectionError
 from tenacity import retry, stop_after_attempt, wait_random, retry_if_exception_type, before_sleep_log
@@ -167,6 +170,7 @@ putback_classes = {k: v for k, v in prior_shot_type_to_shot_dsc.items() if 'TIP_
 
 class ActionGapManager:
     """ This is due to the NBA API blocking us if we make requests too frequently. It's a cooldown mechanism"""
+
     def __init__(self, gap=0.6):
         self.gap = gap
         self.last_action_time = None
@@ -431,3 +435,13 @@ def organize_dataset_from_videos_folder(root_dir: str, new_root_dir: str):
                 shutil.copy(source_file, dest_file)
 
     print("Folder structure and file movement complete.")
+
+
+def download_video(event_info, info_path, video_path):
+    # Save video_event info
+    with open(info_path, "w") as outfile:
+        json.dump(event_info, outfile)
+    # Save video
+    ydl_opts = {'outtmpl': video_path.as_posix(), 'quiet': True}
+    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+        ydl.download([event_info['video_url']])
