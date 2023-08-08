@@ -1,4 +1,8 @@
+import glob
+import os
+import random
 import re
+import shutil
 from datetime import datetime, timedelta
 
 import cv2
@@ -381,3 +385,42 @@ def get_event_msg_action(description):
     else:
         event_msg_action = re.sub(' ', '_', match[0][1]).upper().rstrip("_").replace("3PT_", "")
         return event_msg_action
+
+
+def organize_dataset_from_videos_folder(root_dir: str, new_root_dir: str):
+    # Define the new subdirectories
+    subdirectories = ['train', 'val', 'test']
+
+    # Create the new directory structure
+    if not os.path.exists(new_root_dir):
+        os.makedirs(new_root_dir)
+        for subdirectory in subdirectories:
+            os.makedirs(os.path.join(new_root_dir, subdirectory))
+            for video_type in os.listdir(os.path.join(root_dir)):
+                video_type_dir = os.path.join(new_root_dir, subdirectory, video_type)
+                os.makedirs(video_type_dir)
+
+    # Move video files
+    for subdirectory in subdirectories:
+        for video_type in os.listdir(os.path.join(root_dir)):
+            source_dir = os.path.join(root_dir, video_type)
+            dest_dir = os.path.join(new_root_dir, subdirectory, video_type)
+
+            video_files = glob.glob(os.path.join(source_dir, "*", "*.mp4"))
+            random.shuffle(video_files)
+
+            if subdirectory == 'train':
+                selected_videos = video_files[:40]
+            elif subdirectory == 'val':
+                selected_videos = video_files[40:45]
+            elif subdirectory == 'test':
+                selected_videos = video_files[45:50]
+            else:
+                raise Exception
+
+            for video_file in selected_videos:
+                source_file = video_file
+                dest_file = os.path.join(dest_dir, f"{os.path.basename(os.path.dirname(source_file))}.mp4")
+                shutil.copy(source_file, dest_file)
+
+    print("Folder structure and file movement complete.")
