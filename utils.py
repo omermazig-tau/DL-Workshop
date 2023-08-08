@@ -224,7 +224,8 @@ def get_video_event_info(game_id, game_event_id) -> Dict[str, str]:
     video_event_dict = _get_video_event_json_from_api(game_id, game_event_id)
     video_urls = video_event_dict['resultSets']['Meta']['videoUrls']
     playlist = video_event_dict['resultSets']['playlist']
-    return {'desc': playlist[0]['dsc'], 'video': video_urls[0]['lurl']}
+    return {'desc': playlist[0]['dsc'], 'video_url': video_urls[0]['lurl']}
+
 
 # rf = Roboflow(api_key="8VOyQWRE73L2itfMq1wC")
 # project = rf.workspace().project("basketball-players-fy4c2")
