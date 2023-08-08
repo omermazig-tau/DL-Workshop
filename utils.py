@@ -166,6 +166,7 @@ putback_classes = {k: v for k, v in prior_shot_type_to_shot_dsc.items() if 'TIP_
 
 
 class ActionGapManager:
+    """ This is due to the NBA API blocking us if we make requests too frequently. It's a cooldown mechanism"""
     def __init__(self, gap=0.6):
         self.gap = gap
         self.last_action_time = None
