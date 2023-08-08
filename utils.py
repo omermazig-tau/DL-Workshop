@@ -209,12 +209,18 @@ def get_pbp_data(game_id):
        retry=retry_if_exception_type((JSONDecodeError, ConnectionError, gaierror, HTTPError, RequestsConnectionError)),
        reraise=True,
        before_sleep=before_sleep_log(logger, logging.DEBUG))
-def get_video_event_dict(game_id: str, game_event_id: str) -> Dict:
+def _get_video_event_json_from_api(game_id: str, game_event_id: str) -> Dict:
     with gap_manager.action_gap():
         raw_data = videoeventsasset.VideoEventsAsset(game_id=game_id, game_event_id=str(game_event_id), timeout=5 * 60)
     json = raw_data.get_dict()
     return json
 
+
+def get_video_event_info(game_id, game_event_id) -> Dict[str, str]:
+    video_event_dict = _get_video_event_json_from_api(game_id, game_event_id)
+    video_urls = video_event_dict['resultSets']['Meta']['videoUrls']
+    playlist = video_event_dict['resultSets']['playlist']
+    return {'desc': playlist[0]['dsc'], 'video': video_urls[0]['lurl']}
 
 # rf = Roboflow(api_key="8VOyQWRE73L2itfMq1wC")
 # project = rf.workspace().project("basketball-players-fy4c2")
