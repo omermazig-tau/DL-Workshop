@@ -402,19 +402,27 @@ def get_event_msg_action(description):
 def organize_dataset_from_videos_folder(root_dir: str, new_root_dir: str):
     # Define the new subdirectories
     subdirectories = ['train', 'val', 'test']
+    number_of_videos_per_category = 50
+    if number_of_videos_per_category % 10 != 0:
+        raise Exception("Number has to be a multiply of 10!")
+    video_type_categories = [
+        'ALLEY_OOP_DUNK', 'ALLEY_OOP_LAYUP', 'CUTTING_LAYUP_SHOT', 'DUNK', 'HOOK_SHOT', 'JUMP_BANK_SHOT', 'LAYUP',
+        'REVERSE_LAYUP', 'RUNNING_PULL', 'TURNAROUND_JUMP_SHOT'
+    ]
 
     # Create the new directory structure
     if not os.path.exists(new_root_dir):
         os.makedirs(new_root_dir)
         for subdirectory in subdirectories:
             os.makedirs(os.path.join(new_root_dir, subdirectory))
-            for video_type in os.listdir(os.path.join(root_dir)):
+            for video_type in video_type_categories:
                 video_type_dir = os.path.join(new_root_dir, subdirectory, video_type)
                 os.makedirs(video_type_dir)
 
     # Move video files
     for subdirectory in subdirectories:
-        for video_type in os.listdir(os.path.join(root_dir)):
+        for video_type in video_type_categories:
+            print(f"Coping {video_type} videos for {subdirectory}")
             source_dir = os.path.join(root_dir, video_type)
             dest_dir = os.path.join(new_root_dir, subdirectory, video_type)
 
@@ -422,11 +430,11 @@ def organize_dataset_from_videos_folder(root_dir: str, new_root_dir: str):
             random.shuffle(video_files)
 
             if subdirectory == 'train':
-                selected_videos = video_files[:40]
+                selected_videos = video_files[:int(number_of_videos_per_category*0.8)]
             elif subdirectory == 'val':
-                selected_videos = video_files[40:45]
+                selected_videos = video_files[int(number_of_videos_per_category*0.8):int(number_of_videos_per_category*0.9)]
             elif subdirectory == 'test':
-                selected_videos = video_files[45:50]
+                selected_videos = video_files[int(number_of_videos_per_category*0.9):number_of_videos_per_category]
             else:
                 raise Exception
 
