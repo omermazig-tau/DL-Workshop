@@ -406,8 +406,8 @@ def organize_dataset_from_videos_folder(root_dir: str, new_root_dir: str):
     if number_of_videos_per_category % 10 != 0:
         raise Exception("Number has to be a multiply of 10!")
     video_type_categories = [
-        'ALLEY_OOP_DUNK', 'ALLEY_OOP_LAYUP', 'CUTTING_LAYUP_SHOT', 'DUNK', 'HOOK_SHOT', 'JUMP_BANK_SHOT', 'LAYUP',
-        'REVERSE_LAYUP', 'RUNNING_PULL', 'TURNAROUND_JUMP_SHOT'
+        'ALLEY_OOP_DUNK', 'CUTTING_LAYUP_SHOT', 'DRIVING_LAYUP', 'DUNK', 'FLOATING_JUMP_SHOT',
+        'HOOK_BANK_SHOT', 'JUMP_SHOT', 'REVERSE_DUNK', 'REVERSE_LAYUP', 'TURNAROUND_JUMP_SHOT',
     ]
 
     # Create the new directory structure
