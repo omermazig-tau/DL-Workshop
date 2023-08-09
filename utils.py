@@ -420,24 +420,26 @@ def organize_dataset_from_videos_folder(root_dir: str, new_root_dir: str):
                 os.makedirs(video_type_dir)
 
     # Move video files
-    for subdirectory in subdirectories:
-        for video_type in video_type_categories:
-            print(f"Coping {video_type} videos for {subdirectory}")
-            source_dir = os.path.join(root_dir, video_type)
+
+    for video_type in video_type_categories:
+        source_dir = os.path.join(root_dir, video_type)
+
+        video_files = glob.glob(os.path.join(source_dir, "*", "*.mp4"))
+        random.shuffle(video_files)
+
+        for subdirectory in subdirectories:
             dest_dir = os.path.join(new_root_dir, subdirectory, video_type)
-
-            video_files = glob.glob(os.path.join(source_dir, "*", "*.mp4"))
-            random.shuffle(video_files)
-
             if subdirectory == 'train':
-                selected_videos = video_files[:int(number_of_videos_per_category*0.8)]
+                selected_videos = video_files[:int(number_of_videos_per_category * 0.8)]
             elif subdirectory == 'val':
-                selected_videos = video_files[int(number_of_videos_per_category*0.8):int(number_of_videos_per_category*0.9)]
+                selected_videos = video_files[
+                                  int(number_of_videos_per_category * 0.8):int(number_of_videos_per_category * 0.9)]
             elif subdirectory == 'test':
-                selected_videos = video_files[int(number_of_videos_per_category*0.9):number_of_videos_per_category]
+                selected_videos = video_files[int(number_of_videos_per_category * 0.9):number_of_videos_per_category]
             else:
                 raise Exception
 
+            print(f"Coping {video_type} videos for {subdirectory}")
             for video_file in selected_videos:
                 source_file = video_file
                 dest_file = os.path.join(dest_dir, f"{os.path.basename(os.path.dirname(source_file))}.mp4")
