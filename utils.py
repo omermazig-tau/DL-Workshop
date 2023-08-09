@@ -18,7 +18,7 @@ import youtube_dl
 from _socket import gaierror
 from requests import ConnectionError as RequestsConnectionError
 from tenacity import retry, stop_after_attempt, wait_random, retry_if_exception_type, before_sleep_log
-from typing import Dict
+from typing import Dict, List
 
 from nba_api.stats.endpoints import playbyplayv2, videoeventsasset
 from urllib3.exceptions import HTTPError
@@ -399,16 +399,12 @@ def get_event_msg_action(description):
         return event_msg_action
 
 
-def organize_dataset_from_videos_folder(root_dir: str, new_root_dir: str):
+def organize_dataset_from_videos_folder(root_dir: str, new_root_dir: str, video_type_categories: List[str]):
     # Define the new subdirectories
     subdirectories = ['train', 'val', 'test']
     number_of_videos_per_category = 50
     if number_of_videos_per_category % 10 != 0:
         raise Exception("Number has to be a multiply of 10!")
-    video_type_categories = [
-        'ALLEY_OOP_DUNK', 'CUTTING_LAYUP_SHOT', 'DRIVING_LAYUP', 'DUNK', 'FLOATING_JUMP_SHOT',
-        'HOOK_BANK_SHOT', 'JUMP_SHOT', 'REVERSE_DUNK', 'REVERSE_LAYUP', 'TURNAROUND_JUMP_SHOT',
-    ]
 
     # Create the new directory structure
     if not os.path.exists(new_root_dir):
