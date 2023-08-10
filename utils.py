@@ -248,9 +248,9 @@ def get_video_event_info(game_id, game_event_id) -> Dict[str, str]:
 
 
 def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: str) -> bool:
-    if platform.system().lower == 'windows':
+    if platform.system().lower() == 'windows':
         pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-    elif platform.system().lower == 'linux':
+    elif platform.system().lower() == 'linux':
         pytesseract.pytesseract.tesseract_cmd = r'/usr/local/bin/pytesseract'
     else:
         raise Exception("I don't know what to do for non windows or linux OS")
