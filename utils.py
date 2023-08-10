@@ -405,10 +405,10 @@ def get_event_msg_action(description):
         return event_msg_action
 
 
-def organize_dataset_from_videos_folder(root_dir: str, new_root_dir: str, video_type_categories: List[str]):
+def organize_dataset_from_videos_folder(root_dir: str, new_root_dir: str,
+                                        video_type_categories: List[str], number_of_videos_per_category: int):
     # Define the new subdirectories
     subdirectories = ['train', 'val', 'test']
-    number_of_videos_per_category = 50
     if number_of_videos_per_category % 10 != 0:
         raise Exception("Number has to be a multiply of 10!")
 
