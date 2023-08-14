@@ -19,7 +19,7 @@ import youtube_dl
 from _socket import gaierror
 from requests import ConnectionError as RequestsConnectionError
 from tenacity import retry, stop_after_attempt, wait_random, retry_if_exception_type, before_sleep_log
-from typing import Dict, List
+from typing import Dict, List, Tuple, Optional
 
 from nba_api.stats.endpoints import playbyplayv2, videoeventsasset
 from urllib3.exceptions import HTTPError
@@ -247,7 +247,8 @@ def get_video_event_info(game_id, game_event_id) -> Dict[str, str]:
 #         yield start_point, end_point
 
 
-def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: str) -> bool:
+def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: str,
+              new_resolution: Optional[Tuple[int, int]] = None) -> bool:
     if platform.system().lower() == 'windows':
         pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
     elif platform.system().lower() == 'linux':
@@ -296,10 +297,14 @@ def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: 
 
         # Initialize the video writer to save the cut video
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+        # Specify the resolution for the cut video
+        resolution = (width, height) if not new_resolution else new_resolution
+        out = cv2.VideoWriter(output_path, fourcc, fps, resolution)
         new_video_current_frame = 0
 
         while new_video_current_frame < frames_to_record and ret:
+            # Resize the frame to the desired resolution before writing it
+            frame = cv2.resize(frame, resolution, interpolation=cv2.INTER_AREA)
             # Write the frame to the cut video
             out.write(frame)
             new_video_current_frame += 1
@@ -308,7 +313,7 @@ def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: 
             ret, frame = cap.read()
 
             # # Display the processed frame (optional)
-            # cv2.imshow("Processed Frame", blurred)
+            # cv2.imshow("Processed Frame", frame)
             #
             # # Press 'q' to quit
             # if cv2.waitKey(1) & 0xFF == ord('q'):
