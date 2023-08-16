@@ -262,17 +262,19 @@ def change_video_resolution_and_fps(video_path: str, output_path: str,
 
         # Get height, width, and channels from the frame.shape tuple
         height, width, channels = frame.shape
+        resolution = (width, height)
         # Initialize the video writer to save the cut video
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
         # Specify the new_resolution for the cut video
-        new_resolution = new_resolution if new_resolution else (width, height)
+        new_resolution = new_resolution if new_resolution else resolution
         out = cv2.VideoWriter(output_path, fourcc, new_fps, new_resolution, isColor=True)
         new_video_current_frame = 0
 
         while ret:
             if current_frame % fps_decrease_factor == 0:
-                # Resize the frame to the desired new_resolution before writing it
-                frame = cv2.resize(frame, new_resolution, interpolation=cv2.INTER_AREA)
+                if resolution != new_resolution:
+                    # Resize the frame to the desired new_resolution before writing it
+                    frame = cv2.resize(frame, new_resolution, interpolation=cv2.INTER_AREA)
                 # Write the frame to the cut video
                 out.write(frame)
                 new_video_current_frame += 1
@@ -317,6 +319,7 @@ def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: 
 
         # Get height, width, and channels from the frame.shape tuple
         height, width, channels = frame.shape
+        resolution = (width, height)
 
         while True:
             # Crop the bottom third of the frame
@@ -344,14 +347,15 @@ def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: 
         # Initialize the video writer to save the cut video
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
         # Specify the new_resolution for the cut video
-        new_resolution = new_resolution if new_resolution else (width, height)
+        new_resolution = new_resolution if new_resolution else resolution
         out = cv2.VideoWriter(output_path, fourcc, new_fps, new_resolution, isColor=True)
         new_video_current_frame = 0
 
         while new_video_current_frame < frames_to_record and ret:
             if current_frame % fps_decrease_factor == 0:
-                # Resize the frame to the desired new_resolution before writing it
-                frame = cv2.resize(frame, new_resolution, interpolation=cv2.INTER_AREA)
+                if resolution != new_resolution:
+                    # Resize the frame to the desired new_resolution before writing it
+                    frame = cv2.resize(frame, new_resolution, interpolation=cv2.INTER_AREA)
                 # Write the frame to the cut video
                 out.write(frame)
                 new_video_current_frame += 1
