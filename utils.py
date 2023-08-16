@@ -245,6 +245,50 @@ def get_video_event_info(game_id, game_event_id) -> Dict[str, str]:
 #         start_point = int(x - width / 2), int(y + height / 2)
 #         end_point = int(x + width / 2), int(y - height / 2)
 #         yield start_point, end_point
+def change_video_resolution_and_fps(video_path: str, output_path: str,
+                                    new_resolution: Optional[Tuple[int, int]] = None, fps_decrease_factor: int = 1) -> bool:
+    cap = cv2.VideoCapture(video_path)
+    fps = cap.get(cv2.CAP_PROP_FPS)
+
+    new_fps = fps / fps_decrease_factor
+    current_frame = 0
+
+    try:
+        # Read first frame
+        ret, frame = cap.read()
+        if not ret:
+            # Video has ended, without us recording anything
+            return False
+
+        # Get height, width, and channels from the frame.shape tuple
+        height, width, channels = frame.shape
+        # Initialize the video writer to save the cut video
+        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        # Specify the new_resolution for the cut video
+        new_resolution = new_resolution if new_resolution else (width, height)
+        out = cv2.VideoWriter(output_path, fourcc, new_fps, new_resolution, isColor=True)
+        new_video_current_frame = 0
+
+        while ret:
+            if current_frame % fps_decrease_factor == 0:
+                # Resize the frame to the desired new_resolution before writing it
+                frame = cv2.resize(frame, new_resolution, interpolation=cv2.INTER_AREA)
+                # Write the frame to the cut video
+                out.write(frame)
+                new_video_current_frame += 1
+
+            current_frame += 1
+            # Read next frame
+            ret, frame = cap.read()
+
+        # We're done recording
+        out.release()
+        return new_video_current_frame > 0
+
+    finally:
+        # Release the video capture and close all windows
+        cap.release()
+        # cv2.destroyAllWindows()
 
 
 def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: str,
@@ -301,7 +345,7 @@ def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: 
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
         # Specify the new_resolution for the cut video
         new_resolution = new_resolution if new_resolution else (width, height)
-        out = cv2.VideoWriter(output_path, fourcc, new_fps, new_resolution)
+        out = cv2.VideoWriter(output_path, fourcc, new_fps, new_resolution, isColor=True)
         new_video_current_frame = 0
 
         while new_video_current_frame < frames_to_record and ret:
@@ -435,7 +479,7 @@ def organize_dataset_from_videos_folder(root_dir: str, new_root_dir: str,
     for video_type in video_type_categories:
         source_dir = os.path.join(root_dir, video_type)
 
-        video_files = glob.glob(os.path.join(source_dir, "*", "*.mp4"))
+        video_files = glob.glob(os.path.join(source_dir, "*", "cut_video.avi"))
         random.shuffle(video_files)
 
         for subdirectory in subdirectories:
@@ -453,7 +497,7 @@ def organize_dataset_from_videos_folder(root_dir: str, new_root_dir: str,
             print(f"Coping {video_type} videos for {subdirectory}")
             for video_file in selected_videos:
                 source_file = video_file
-                dest_file = os.path.join(dest_dir, f"{os.path.basename(os.path.dirname(source_file))}.mp4")
+                dest_file = os.path.join(dest_dir, f"{os.path.basename(os.path.dirname(source_file))}.avi")
                 shutil.copy(source_file, dest_file)
 
     print("Folder structure and file movement complete.")
