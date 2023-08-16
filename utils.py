@@ -248,7 +248,8 @@ def get_video_event_info(game_id, game_event_id) -> Dict[str, str]:
 
 
 def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: str,
-              new_resolution: Optional[Tuple[int, int]] = None) -> bool:
+              new_resolution: Optional[Tuple[int, int]] = None,
+              fps_decrease_factor: int = 1) -> bool:
     if platform.system().lower() == 'windows':
         pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
     elif platform.system().lower() == 'linux':
@@ -259,7 +260,8 @@ def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: 
     cap = cv2.VideoCapture(video_path)
     fps = cap.get(cv2.CAP_PROP_FPS)
 
-    frames_to_record = int(cut_duration * fps)
+    new_fps = fps / fps_decrease_factor
+    frames_to_record = int(cut_duration * new_fps)
     current_frame = 0
 
     try:
@@ -297,27 +299,29 @@ def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: 
 
         # Initialize the video writer to save the cut video
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        # Specify the resolution for the cut video
-        resolution = (width, height) if not new_resolution else new_resolution
-        out = cv2.VideoWriter(output_path, fourcc, fps, resolution)
+        # Specify the new_resolution for the cut video
+        new_resolution = new_resolution if new_resolution else (width, height)
+        out = cv2.VideoWriter(output_path, fourcc, new_fps, new_resolution)
         new_video_current_frame = 0
 
         while new_video_current_frame < frames_to_record and ret:
-            # Resize the frame to the desired resolution before writing it
-            frame = cv2.resize(frame, resolution, interpolation=cv2.INTER_AREA)
-            # Write the frame to the cut video
-            out.write(frame)
-            new_video_current_frame += 1
+            if current_frame % fps_decrease_factor == 0:
+                # Resize the frame to the desired new_resolution before writing it
+                frame = cv2.resize(frame, new_resolution, interpolation=cv2.INTER_AREA)
+                # Write the frame to the cut video
+                out.write(frame)
+                new_video_current_frame += 1
+
+                # # Display the processed frame (optional)
+                # cv2.imshow("Processed Frame", frame)
+                #
+                # # Press 'q' to quit
+                # if cv2.waitKey(1) & 0xFF == ord('q'):
+                #     break
+
             current_frame += 1
             # Read next frame
             ret, frame = cap.read()
-
-            # # Display the processed frame (optional)
-            # cv2.imshow("Processed Frame", frame)
-            #
-            # # Press 'q' to quit
-            # if cv2.waitKey(1) & 0xFF == ord('q'):
-            #     break
 
         # We're done recording
         out.release()
