@@ -18,6 +18,7 @@ from json import JSONDecodeError
 import youtube_dl
 from _socket import gaierror
 from requests import ConnectionError as RequestsConnectionError
+from sklearn.model_selection import train_test_split
 from tenacity import retry, stop_after_attempt, wait_random, retry_if_exception_type, before_sleep_log
 from typing import Dict, List, Tuple, Optional
 
@@ -246,7 +247,8 @@ def get_video_event_info(game_id, game_event_id) -> Dict[str, str]:
 #         end_point = int(x + width / 2), int(y - height / 2)
 #         yield start_point, end_point
 def change_video_resolution_and_fps(video_path: str, output_path: str,
-                                    new_resolution: Optional[Tuple[int, int]] = None, fps_decrease_factor: int = 1) -> bool:
+                                    new_resolution: Optional[Tuple[int, int]] = None,
+                                    fps_decrease_factor: int = 1) -> bool:
     cap = cv2.VideoCapture(video_path)
     fps = cap.get(cv2.CAP_PROP_FPS)
 
@@ -462,12 +464,18 @@ def get_event_msg_action(description):
         return event_msg_action
 
 
-def organize_dataset_from_videos_folder(root_dir: str, new_root_dir: str,
-                                        video_type_categories: List[str], number_of_videos_per_category: int):
+def organize_dataset_from_videos_folder(root_dir: str, new_root_dir: str, video_type_categories: List[str],
+                                        number_of_videos_per_category: int,
+                                        train_val_test_split: Tuple[int, int, int] = (0.8, 0.1, 0.1)):
     # Define the new subdirectories
     subdirectories = ['train', 'val', 'test']
     if number_of_videos_per_category % 10 != 0:
         raise Exception("Number has to be a multiply of 10!")
+
+    if sum(train_val_test_split) != 1 or any((x*100) % 10 for x in train_val_test_split):
+        raise Exception(f"split {train_val_test_split} is not right")
+
+    train_ratio, validate_ratio, test_ratio = train_val_test_split
 
     # Create the new directory structure
     if not os.path.exists(new_root_dir):
@@ -486,18 +494,13 @@ def organize_dataset_from_videos_folder(root_dir: str, new_root_dir: str,
         video_files = glob.glob(os.path.join(source_dir, "*", "cut_video.avi"))
         random.shuffle(video_files)
 
+        videos = {}
+        videos['train'], temp_data = train_test_split(video_files, test_size=1 - train_ratio)
+        videos['val'], videos['test'] = train_test_split(temp_data,
+                                                         test_size=test_ratio / (validate_ratio + test_ratio))
         for subdirectory in subdirectories:
             dest_dir = os.path.join(new_root_dir, subdirectory, video_type)
-            if subdirectory == 'train':
-                selected_videos = video_files[:int(number_of_videos_per_category * 0.8)]
-            elif subdirectory == 'val':
-                selected_videos = video_files[
-                                  int(number_of_videos_per_category * 0.8):int(number_of_videos_per_category * 0.9)]
-            elif subdirectory == 'test':
-                selected_videos = video_files[int(number_of_videos_per_category * 0.9):number_of_videos_per_category]
-            else:
-                raise Exception
-
+            selected_videos = videos[subdirectory]
             print(f"Coping {video_type} videos for {subdirectory}")
             for video_file in selected_videos:
                 source_file = video_file
