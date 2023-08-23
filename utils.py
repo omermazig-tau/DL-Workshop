@@ -475,7 +475,7 @@ def organize_dataset_from_videos_folder(root_dir: str, new_root_dir: str, video_
     if number_of_videos_per_category % 10 != 0:
         raise Exception("Number has to be a multiply of 10!")
 
-    if sum(train_val_test_split) != 1 or any((x*100) % 10 for x in train_val_test_split):
+    if sum(train_val_test_split) != 1 or any((x * 100) % 10 for x in train_val_test_split):
         raise Exception(f"split {train_val_test_split} is not right")
 
     train_ratio, validate_ratio, test_ratio = train_val_test_split
