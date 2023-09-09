@@ -298,6 +298,8 @@ def change_video_resolution_and_fps(video_path: str, output_path: str,
 def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: str,
               new_resolution: Optional[Tuple[int, int]] = None,
               fps_decrease_factor: int = 1) -> bool:
+    minimum_cut_duration = 3
+
     if platform.system().lower() == 'windows':
         pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
     elif platform.system().lower() == 'linux':
@@ -310,6 +312,7 @@ def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: 
 
     new_fps = fps / fps_decrease_factor
     frames_to_record = int(cut_duration * new_fps)
+    min_frames_to_record = int(minimum_cut_duration * new_fps)
     current_frame = 0
 
     try:
@@ -375,7 +378,7 @@ def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: 
 
         # We're done recording
         out.release()
-        return new_video_current_frame > 0
+        return new_video_current_frame > min_frames_to_record
 
     finally:
         # Release the video capture and close all windows
