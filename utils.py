@@ -295,9 +295,19 @@ def change_video_resolution_and_fps(video_path: str, output_path: str,
         # cv2.destroyAllWindows()
 
 
-def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: str,
-              new_resolution: Optional[Tuple[int, int]] = None,
-              fps_decrease_factor: int = 1) -> bool:
+def cut_video(video_path: str, shot_time: str, offset_seconds_before: int, offset_seconds_after: int,
+              output_path: str, new_resolution: Optional[Tuple[int, int]] = None, fps_decrease_factor: int = 1) -> bool:
+    """
+
+    :param video_path: Path to the video
+    :param shot_time: The shot-clock reading, when the shot was taken
+    :param offset_seconds_before: How many seconds of the video to take before the alleged shot moment.
+    :param offset_seconds_after: How many seconds of the video to take after the alleged shot moment.
+    :param output_path: Cut video path
+    :param new_resolution: New video resolution
+    :param fps_decrease_factor: New video fps decrease
+    :return: Whether the video was cut successfully or not
+    """
     minimum_cut_duration = 3
 
     if platform.system().lower() == 'windows':
@@ -311,7 +321,7 @@ def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: 
     fps = cap.get(cv2.CAP_PROP_FPS)
 
     new_fps = fps / fps_decrease_factor
-    frames_to_record = int(cut_duration * new_fps)
+    frames_to_record = int((offset_seconds_before + offset_seconds_after) * new_fps)
     min_frames_to_record = int(minimum_cut_duration * new_fps)
     current_frame = 0
 
@@ -336,7 +346,10 @@ def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: 
             text_data = pytesseract.image_to_string(blurred, lang='eng', config='--psm 11')
 
             # Check if the game clock matches the condition, and we should start recording
-            if start_time in text_data:
+            if shot_time in text_data:
+                # Jump the prior_offset_seconds back in the video to start the cut from there
+                frame_to_start_from = max(0, current_frame - int(offset_seconds_before * fps) + 1)
+                cap.set(cv2.CAP_PROP_POS_FRAMES, frame_to_start_from)
                 # Exit to start recording
                 break
             else:
@@ -386,7 +399,7 @@ def cut_video(video_path: str, start_time: str, cut_duration: int, output_path: 
         # cv2.destroyAllWindows()
 
 
-def add_seconds_to_time(time_str, seconds_to_add):
+def add_seconds_to_time(time_str, seconds_to_add=0):
     # Parse the input time string into a datetime object
     time_format = "%M:%S"
     time_obj = datetime.strptime(time_str, time_format)
