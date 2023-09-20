@@ -348,8 +348,13 @@ def cut_video(video_path: str, shot_time: str, offset_seconds_before: int, offse
             # Check if the game clock matches the condition, and we should start recording
             if shot_time in text_data:
                 # Jump the prior_offset_seconds back in the video to start the cut from there
-                frame_to_start_from = max(0, current_frame - int(offset_seconds_before * fps) + 1)
+                frame_to_start_from = max(0, current_frame - int(offset_seconds_before * fps))
                 cap.set(cv2.CAP_PROP_POS_FRAMES, frame_to_start_from)
+                # Read next frame
+                ret, frame = cap.read()
+                if not ret:
+                    # Video has ended, without us recording anything
+                    return False
                 # Exit to start recording
                 break
             else:
