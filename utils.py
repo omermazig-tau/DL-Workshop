@@ -29,6 +29,12 @@ from urllib3.exceptions import HTTPError
 
 logger = logging.getLogger(__name__)
 
+# Dict for names in the original NBA data that we want to be saved differently
+original_name_conversion_dict = {
+    'FADEAWAY_JUMPER': "FADEAWAY_JUMP_SHOT",
+    'RUNNING_PULL': "RUNNING_PULLUP"
+}
+
 # Each shot type to it's name
 prior_shot_type_to_shot_dsc = {
     1: 'JUMP_SHOT',
@@ -56,7 +62,7 @@ prior_shot_type_to_shot_dsc = {
     56: 'RUNNING_HOOK_SHOT',
     57: 'DRIVING_HOOK_SHOT',
     58: 'TURNAROUND_HOOK_SHOT',
-    63: 'FADEAWAY_JUMPER',
+    63: 'FADEAWAY_JUMP_SHOT',
     65: 'JUMP_HOOK_SHOT',
     66: 'JUMP_BANK_SHOT',
     67: 'HOOK_BANK_SHOT',
@@ -87,7 +93,7 @@ prior_shot_type_to_shot_dsc = {
     100: 'RUNNING_ALLEY_OOP_LAYUP_SHOT',
     101: 'DRIVING_FLOATING_JUMP_SHOT',
     102: 'DRIVING_FLOATING_BANK_JUMP_SHOT',
-    103: 'RUNNING_PULL',
+    103: 'RUNNING_PULLUP',
     104: 'STEP_BACK_BANK_JUMP_SHOT',
     105: 'TURNAROUND_FADEAWAY_BANK_JUMP_SHOT',
     106: 'RUNNING_ALLEY_OOP_DUNK_SHOT',
