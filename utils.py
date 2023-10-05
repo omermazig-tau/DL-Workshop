@@ -539,3 +539,11 @@ def download_video(event_info, info_path, video_path):
     ydl_opts = {'outtmpl': video_path.as_posix(), 'quiet': True}
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
         ydl.download([event_info['video_url']])
+
+
+def find_defected_video_folders(root_folder):
+    defected_video_folders = []
+    for root, dirs, files in os.walk(root_folder):
+        if len(files) > 0 and "cut_video.avi" not in files:
+            defected_video_folders.append(root)
+    return defected_video_folders
