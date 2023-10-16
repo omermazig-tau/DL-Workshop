@@ -1,6 +1,8 @@
 import glob
+import itertools
 import json
 import os
+import pathlib
 import platform
 import random
 import re
@@ -547,3 +549,27 @@ def find_defected_video_folders(root_folder):
         if len(files) > 0 and "cut_video.avi" not in files:
             defected_video_folders.append(root)
     return defected_video_folders
+
+
+def create_tiny_dataset(original_dataset_path: pathlib.Path):
+    # Get the original basename without the extension
+    basename = original_dataset_path.stem
+    # Get the original extension (suffix)
+    extension = original_dataset_path.suffix
+    # Create the new basename with "tiny" added
+    new_basename = f"{basename}_tiny{extension}"
+    # Create the new Path with the updated basename
+    tiny_dataset_path = original_dataset_path.with_name(new_basename)
+
+    for dataset_type in original_dataset_path.iterdir():
+        for shot_type in dataset_type.iterdir():
+            video_num = 8 if dataset_type.name == "train" else 1
+            for video_path in itertools.islice(shot_type.iterdir(), video_num):
+                # Split the path into its parts
+                path_parts = list(video_path.parts)
+                # Modify the desired part (in this case, the second part)
+                path_parts[path_parts.index(basename)] = new_basename
+                # Create a new path with the modified parts
+                new_path = pathlib.Path(*path_parts)
+                new_path.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy(video_path, new_path)
