@@ -250,18 +250,25 @@ def get_video_event_info(game_id, game_event_id) -> Dict[str, str]:
 #         yield start_point, end_point
 def change_video_resolution_and_fps(video_path: str, output_path: str,
                                     new_resolution: Optional[Tuple[int, int]] = None,
-                                    fps_decrease_factor: int = 1) -> bool:
+                                    new_fps: Optional[int] = None) -> bool:
     cap = cv2.VideoCapture(video_path)
 
     try:
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        original_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-        original_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        original_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        original_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        resolution = (original_width, original_height)
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        # Specify the new_resolution and new_fps for the cut video
+        new_resolution = new_resolution if new_resolution else resolution
+        new_fps = new_fps if new_fps else fps
+        fps_decrease_factor = fps / new_fps
+        if not fps_decrease_factor.is_integer():
+            raise ValueError(f"New fps ({new_fps}) must be a divisor of the current fps ({fps})")
 
-        if fps_decrease_factor == 1 and (original_width, original_height) == new_resolution:
+        if fps == new_fps and (original_width, original_height) == new_resolution:
+            shutil.copy(video_path, output_path)
             return True
 
-        new_fps = fps / fps_decrease_factor
         current_frame = 0
 
         # Read first frame
@@ -270,11 +277,8 @@ def change_video_resolution_and_fps(video_path: str, output_path: str,
             # Video has ended, without us recording anything
             return False
 
-        resolution = (original_width, original_height)
         # Initialize the video writer to save the cut video
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        # Specify the new_resolution for the cut video
-        new_resolution = new_resolution if new_resolution else resolution
         out = cv2.VideoWriter(output_path, fourcc, new_fps, new_resolution, isColor=True)
         new_video_current_frame = 0
 
@@ -302,7 +306,8 @@ def change_video_resolution_and_fps(video_path: str, output_path: str,
 
 
 def cut_video(video_path: str, shot_time: str, offset_seconds_before: int, offset_seconds_after: int,
-              output_path: str, new_resolution: Optional[Tuple[int, int]] = None, fps_decrease_factor: int = 1) -> bool:
+              output_path: str, new_resolution: Optional[Tuple[int, int]] = None,
+              new_fps: Optional[int] = None) -> bool:
     """
 
     :param video_path: Path to the video
@@ -311,7 +316,7 @@ def cut_video(video_path: str, shot_time: str, offset_seconds_before: int, offse
     :param offset_seconds_after: How many seconds of the video to take after the alleged shot moment.
     :param output_path: Cut video path
     :param new_resolution: New video resolution
-    :param fps_decrease_factor: New video fps decrease
+    :param new_fps: New video fps
     :return: Whether the video was cut successfully or not
     """
     minimum_cut_duration = 3
@@ -324,9 +329,12 @@ def cut_video(video_path: str, shot_time: str, offset_seconds_before: int, offse
         raise Exception("I don't know what to do for non windows or linux OS")
 
     cap = cv2.VideoCapture(video_path)
-    fps = cap.get(cv2.CAP_PROP_FPS)
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    new_fps = new_fps if new_fps else fps
 
-    new_fps = fps / fps_decrease_factor
+    fps_decrease_factor = fps / new_fps
+    if not fps_decrease_factor.is_integer():
+        raise ValueError(f"New fps ({new_fps}) must be a divisor of the current fps ({fps})")
     frames_to_record = int((offset_seconds_before + offset_seconds_after) * new_fps)
     min_frames_to_record = int(minimum_cut_duration * new_fps)
     current_frame = 0
