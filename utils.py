@@ -253,6 +253,12 @@ def change_video_resolution_and_fps(video_path: str, output_path: str,
                                     fps_decrease_factor: int = 1) -> bool:
     cap = cv2.VideoCapture(video_path)
     fps = cap.get(cv2.CAP_PROP_FPS)
+    original_width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+    original_height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+
+    if fps_decrease_factor == 1 and (original_width, original_height) == new_resolution:
+        cap.release()
+        return True
 
     new_fps = fps / fps_decrease_factor
     current_frame = 0
@@ -264,9 +270,7 @@ def change_video_resolution_and_fps(video_path: str, output_path: str,
             # Video has ended, without us recording anything
             return False
 
-        # Get height, width, and channels from the frame.shape tuple
-        height, width, channels = frame.shape
-        resolution = (width, height)
+        resolution = (original_width, original_height)
         # Initialize the video writer to save the cut video
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
         # Specify the new_resolution for the cut video
