@@ -1,1 +1,8 @@
 *.mp4
+/.ipynb_checkpoints/
+/UCF101_subset/
+/my_UCF_evaluation_set/
+.idea/
+__pycache__/
+new_videos/
+new_dataset/
