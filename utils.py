@@ -256,7 +256,8 @@ def get_video_event_info(game_id, game_event_id) -> Dict[str, str]:
 #         yield start_point, end_point
 def change_video_resolution_and_fps(video_path: str, output_path: str,
                                     new_resolution: Optional[Tuple[int, int]] = None,
-                                    new_fps: Optional[int] = None) -> bool:
+                                    new_fps: Optional[int] = None,
+                                    acceptable_fps_violation: int = 0) -> bool:
     cap = cv2.VideoCapture(video_path)
 
     try:
@@ -266,7 +267,7 @@ def change_video_resolution_and_fps(video_path: str, output_path: str,
         fps = int(cap.get(cv2.CAP_PROP_FPS))
         # Specify the new_resolution and new_fps for the cut video
         new_resolution = new_resolution if new_resolution else resolution
-        new_fps = new_fps if new_fps else fps
+        new_fps = fps if ((not new_fps) or (abs(new_fps - fps) <= acceptable_fps_violation)) else new_fps
         fps_decrease_factor = fps / new_fps
         if not fps_decrease_factor.is_integer():
             raise ValueError(f"New fps ({new_fps}) must be a divisor of the current fps ({fps})")
@@ -308,7 +309,6 @@ def change_video_resolution_and_fps(video_path: str, output_path: str,
     finally:
         # Release the video capture and close all windows
         cap.release()
-        # cv2.destroyAllWindows()
 
 
 def cut_video(video_path: str, shot_time: str, offset_seconds_before: int, offset_seconds_after: int,
