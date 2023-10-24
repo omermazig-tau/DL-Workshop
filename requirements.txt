@@ -19,3 +19,4 @@ transformers
 urllib3
 youtube-dl
 jupyterlab
+nba-api
