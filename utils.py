@@ -569,7 +569,7 @@ def find_defected_video_folders(root_folder):
     return defected_video_folders
 
 
-def create_tiny_dataset(original_dataset_path: pathlib.Path):
+def create_tiny_dataset(original_dataset_path: pathlib.Path, train_video_num: int = 8, test_video_num: int = 1):
     # Get the original basename without the extension
     basename = original_dataset_path.stem
     # Get the original extension (suffix)
@@ -581,7 +581,7 @@ def create_tiny_dataset(original_dataset_path: pathlib.Path):
 
     for dataset_type in original_dataset_path.iterdir():
         for shot_type in dataset_type.iterdir():
-            video_num = 8 if dataset_type.name == "train" else 1
+            video_num = train_video_num if dataset_type.name == "train" else test_video_num
             for video_path in itertools.islice(shot_type.iterdir(), video_num):
                 # Split the path into its parts
                 path_parts = list(video_path.parts)
