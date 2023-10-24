@@ -569,6 +569,14 @@ def find_defected_video_folders(root_folder):
     return defected_video_folders
 
 
+def _yield_without_desktop_ini(path_iterator):
+    for item in path_iterator:
+        if item.name == 'desktop.ini':
+            continue
+        else:
+            yield item
+
+
 def create_tiny_dataset(original_dataset_path: pathlib.Path, train_video_num: int = 8, test_video_num: int = 1):
     # Get the original basename without the extension
     basename = original_dataset_path.stem
@@ -579,10 +587,10 @@ def create_tiny_dataset(original_dataset_path: pathlib.Path, train_video_num: in
     # Create the new Path with the updated basename
     tiny_dataset_path = original_dataset_path.with_name(new_basename)
 
-    for dataset_type in original_dataset_path.iterdir():
-        for shot_type in dataset_type.iterdir():
+    for dataset_type in _yield_without_desktop_ini(original_dataset_path.iterdir()):
+        for shot_type in _yield_without_desktop_ini(dataset_type.iterdir()):
             video_num = train_video_num if dataset_type.name == "train" else test_video_num
-            for video_path in itertools.islice(shot_type.iterdir(), video_num):
+            for video_path in _yield_without_desktop_ini(itertools.islice(shot_type.iterdir(), video_num)):
                 # Split the path into its parts
                 path_parts = list(video_path.parts)
                 # Modify the desired part (in this case, the second part)
