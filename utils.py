@@ -22,9 +22,10 @@ from _socket import gaierror
 from requests import ConnectionError as RequestsConnectionError
 from sklearn.model_selection import train_test_split
 from tenacity import retry, stop_after_attempt, wait_random, retry_if_exception_type, before_sleep_log
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, Tuple, Optional, Iterable
 
 from nba_api.stats.endpoints import playbyplayv2, videoeventsasset
+from tqdm import tqdm
 from urllib3.exceptions import HTTPError
 
 logger = logging.getLogger(__name__)
@@ -505,7 +506,7 @@ def get_event_msg_action(description):
         return event_msg_action
 
 
-def organize_dataset_from_videos_folder(root_dir: str, new_root_dir: str, video_type_categories: List[str],
+def organize_dataset_from_videos_folder(root_dir: str, new_root_dir: str, video_type_categories: Iterable[str],
                                         number_of_videos_per_category: int,
                                         train_val_test_split: Tuple[int, int, int] = (0.8, 0.1, 0.1)):
     # Define the new subdirectories
@@ -529,7 +530,7 @@ def organize_dataset_from_videos_folder(root_dir: str, new_root_dir: str, video_
 
     # Move video files
 
-    for video_type in video_type_categories:
+    for video_type in tqdm(video_type_categories):
         source_dir = os.path.join(root_dir, video_type)
 
         video_files = glob.glob(os.path.join(source_dir, "*", "cut_video.avi"))
