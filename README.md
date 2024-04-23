@@ -4,7 +4,7 @@
 
 You can run the [create_videos_bank.ipynb](create_videos_bank.ipynb) notebook to create it yourself, but there might be some dependency management required for that. For example, py-tesseract needs you to first manually install [the program manually](https://github.com/tesseract-ocr/tesseract#installing-tesseract)
 
-If you don't want to deal with that, you can download a [big dataset (21 GB)](https://drive.google.com/drive/folders/1g7JBMC1XJAaqHzYRpsl5XhDaja-ZS7Vr?usp=sharing) or a [small dataset (256 MB)](https://drive.google.com/drive/folders/1ylXW32poiBJWdrjd9eGmEWvoDTRxyFlc?usp=sharing) from my drive, rename it `dataset`, and put it in the project's root folder.
+If you don't want to deal with that, you can download a [tiny dataset (111 MB)](https://drive.google.com/drive/folders/1XEUypS_UkXN5oUMKKtlJLbokTTKO0M2U?usp=sharing) from my drive, rename it `dataset`, and put it in the project's root folder. This of course will not be enough to train the model, but you'll be able to run inference.
 
 ### Checking dataset metrics ###
 
